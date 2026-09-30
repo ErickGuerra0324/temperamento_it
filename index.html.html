@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Test de temperamentos</title>
+<style>
+:root{--bg:#f6f3ee;--fg:#22201c;--mut:#6b665d;--card:#fff;--line:#d9d3c8;--ac:#2f5d62;--S:#e0a526;--C:#c2452d;--M:#4a5d8f;--F:#5c8a5a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#191816;--fg:#ece8e0;--mut:#a09a8e;--card:#242220;--line:#3a3733;--ac:#7fb3b8}}
+:root[data-theme="dark"]{--bg:#191816;--fg:#ece8e0;--mut:#a09a8e;--card:#242220;--line:#3a3733;--ac:#7fb3b8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Georgia,"Times New Roman",serif;line-height:1.55}
+main{max-width:640px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:2rem;margin:0 0 .4rem;line-height:1.15}
+p{margin:.5rem 0}
+.mut{color:var(--mut)}
+button{font:inherit;cursor:pointer}
+.start,.next{background:var(--ac);color:var(--bg);border:0;border-radius:8px;padding:12px 22px;font-size:1rem;margin-top:16px}
+.next:disabled{opacity:.35;cursor:default}
+.bar{height:6px;background:var(--line);border-radius:3px;margin:18px 0}
+.bar i{display:block;height:100%;background:var(--ac);border-radius:3px;transition:width .25s}
+h2{font-size:1.25rem;margin:.2rem 0 1rem;line-height:1.3}
+.opt{display:block;width:100%;text-align:left;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:13px 15px;margin:9px 0;font-size:1rem;transition:border-color .15s,background .15s}
+.opt:hover{border-color:var(--ac)}
+.opt:focus-visible,.start:focus-visible,.next:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.opt.sel{border:2px solid var(--ac);padding:12px 14px}
+.row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.row b{width:92px;font-weight:normal}
+.track{flex:1;height:14px;background:var(--line);border-radius:7px;overflow:hidden}
+.track i{display:block;height:100%}
+.pct{width:42px;text-align:right}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:16px 0}
+.box h3{margin:0 0 6px}
+.hide{display:none}
+input{font:inherit;width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);margin:8px 0}
+textarea{font:inherit;width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);resize:none}
+input:focus-visible{outline:3px solid var(--ac);outline-offset:1px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.sm{background:none;border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:6px 12px;font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<section id="intro">
+<h1>Test de los cuatro temperamentos</h1>
+<p>12 preguntas. Elige en cada una la opción que más se parezca a ti en la vida diaria, no a cómo quisieras ser. No hay respuestas correctas.</p>
+<p class="mut">Dura unos 3 minutos. Es una herramienta de orientación, no un diagnóstico psicológico.</p>
+<button class="start" id="go">Comenzar</button>
+</section>
+
+<section id="quiz" class="hide">
+<div class="bar"><i id="fill"></i></div>
+<p class="mut" id="count"></p>
+<h2 id="q"></h2>
+<div id="opts"></div>
+<button class="next" id="nx" disabled>Siguiente</button>
+</section>
+
+<section id="res" class="hide">
+<h1>Tu resultado</h1>
+<div id="bars"></div>
+<div id="desc"></div>
+<div class="box">
+<h3>Compartir mi resultado</h3>
+<p class="mut">Escribe tu nombre, copia el texto y envíaselo a quien te compartió el test.</p>
+<input id="nm" type="text" maxlength="60" placeholder="Tu nombre" autocomplete="name">
+<textarea id="tx" readonly rows="3"></textarea>
+<button class="next" id="cp" style="margin-top:4px">Copiar mi resultado</button>
+<p id="st" class="mut" role="status"></p>
+</div>
+<button class="start" id="again">Repetir el test</button>
+</section>
+</main>
+
+<script>
+const T={
+S:{n:"Sanguíneo",c:"var(--S)",d:"Sociable, optimista y expresivo. Contagia energía, hace amigos con facilidad y se adapta rápido. Le cuesta la constancia, el orden y la puntualidad, y puede dispersarse o prometer más de lo que cumple.",t:"Te conviene: rodearte de gente que aporte estructura, usar agendas y recordatorios, y terminar una tarea antes de empezar otra."},
+C:{n:"Colérico",c:"var(--C)",d:"Decidido, ambicioso y orientado a resultados. Tiene liderazgo natural, iniciativa y gran fuerza de voluntad. Puede ser impaciente, dominante o explosivo, y le cuesta delegar o admitir errores.",t:"Te conviene: practicar la escucha, dar espacio a otras opiniones y respirar antes de reaccionar cuando algo te irrita."},
+M:{n:"Melancólico",c:"var(--M)",d:"Profundo, analítico y perfeccionista. Es leal, sensible, creativo y muy detallista. Tiende a la autocrítica, al pesimismo y a rumiar los problemas, y le cuesta confiar rápido.",t:"Te conviene: fijar límites a la perfección, celebrar logros pequeños y hablar de lo que sientes en lugar de guardarlo."},
+F:{n:"Flemático",c:"var(--F)",d:"Calmado, paciente y confiable. Buen oyente y mediador, mantiene la serenidad bajo presión y es constante. Puede parecer pasivo, resistirse al cambio y evitar el conflicto o las decisiones.",t:"Te conviene: marcarte metas concretas, expresar tu opinión aunque genere tensión y salir de la zona de confort de vez en cuando."}
+};
+const Q=[
+["En una reunión social, normalmente...",["Hablo con todos y animo el ambiente","Tomo el control y propongo qué hacer","Observo y hablo con pocas personas","Me quedo tranquilo y disfruto sin destacar"]],
+["Ante un problema inesperado...",["Lo tomo con humor y busco el lado bueno","Actúo de inmediato para resolverlo","Analizo todo lo que podría salir mal","Mantengo la calma y espero a ver cómo evoluciona"]],
+["Mi forma de trabajar es...",["Empiezo con entusiasmo pero me distraigo","Intensa y directa a los resultados","Meticulosa, reviso cada detalle","Constante, sin prisa y sin pausa"]],
+["Cuando alguien me contradice...",["Lo dejo pasar o lo tomo a broma","Defiendo mi postura con firmeza","Me lo tomo a pecho y le doy vueltas","Evito el conflicto y cedo"]],
+["Mis emociones son...",["Cambiantes y muy expresivas","Intensas; me enojo con rapidez","Profundas, pero las guardo para mí","Estables, rara vez me altero"]],
+["Al planear un viaje...",["Improviso sobre la marcha","Decido yo el itinerario","Planeo cada detalle y posibles imprevistos","Me adapto a lo que propongan los demás"]],
+["En mis amistades...",["Tengo muchas y conozco gente con facilidad","Pocas, pero exijo lealtad y compromiso","Pocas y profundas; tardo en confiar","Son estables y de largo plazo; soy buen oyente"]],
+["Ante una decisión importante...",["Me dejo llevar por la intuición","Decido rápido","Sopeso pros y contras durante mucho tiempo","La pospongo hasta sentirme seguro"]],
+["Mi mayor defecto es...",["El desorden y la impuntualidad","La impaciencia y la terquedad","El pesimismo y la autocrítica","La pasividad y la falta de iniciativa"]],
+["En un equipo de trabajo suelo...",["Motivar y aportar ideas creativas","Liderar y repartir tareas","Cuidar la calidad de lo que se entrega","Mediar y mantener la armonía"]],
+["Mi tiempo libre ideal es...",["Una fiesta o plan con amigos","Un deporte, reto o competencia","Leer, música o arte, a solas","Descansar en casa sin planes"]],
+["Bajo mucha presión...",["Me disperso, pero sigo animado","Me vuelvo más decidido y dominante","Me angustio y me exijo más","Me desconecto con calma o me bloqueo"]]
+];
+const K=["S","C","M","F"];
+let i=0,sc,pick,order;
+const $=id=>document.getElementById(id);
+function show(id){["intro","quiz","res"].forEach(s=>$(s).classList.toggle("hide",s!==id));window.scrollTo(0,0)}
+function start(){i=0;sc={S:0,C:0,M:0,F:0};render();show("quiz")}
+function render(){
+pick=null;$("nx").disabled=true;
+$("nx").textContent=i===Q.length-1?"Ver resultado":"Siguiente";
+$("count").textContent="Pregunta "+(i+1)+" de "+Q.length;
+$("fill").style.width=(i/Q.length*100)+"%";
+$("q").textContent=Q[i][0];
+order=[0,1,2,3].sort(()=>Math.random()-.5);
+$("opts").innerHTML="";
+order.forEach(k=>{
+const b=document.createElement("button");b.className="opt";b.textContent=Q[i][1][k];
+b.onclick=()=>{pick=k;[...$("opts").children].forEach(x=>x.classList.remove("sel"));b.classList.add("sel");$("nx").disabled=false};
+$("opts").appendChild(b)});
+}
+function next(){
+if(pick===null)return;
+sc[K[pick]]++;
+if(++i<Q.length)render();else result();
+}
+function result(){
+const r=K.map(k=>[k,Math.round(sc[k]/Q.length*100)]).sort((a,b)=>b[1]-a[1]);
+$("bars").innerHTML=r.map(([k,p])=>`<div class="row"><b>${T[k].n}</b><div class="track"><i style="width:${p}%;background:${T[k].c}"></i></div><span class="pct">${p}%</span></div>`).join("");
+const a=r[0][0],b=r[1][0],mix=r[1][1]>=25;
+last={a:a,p:{S:Math.round(sc.S/Q.length*100),C:Math.round(sc.C/Q.length*100),M:Math.round(sc.M/Q.length*100),F:Math.round(sc.F/Q.length*100)}};
+upd();
+$("desc").innerHTML=`<div class="box"><h3>Temperamento predominante: ${T[a].n}</h3><p>${T[a].d}</p><p class="mut">${T[a].t}</p></div>`+
+(mix?`<div class="box"><h3>Rasgos secundarios: ${T[b].n}</h3><p>${T[b].d}</p></div>`:"")+
+`<p class="mut">La mayoría de las personas es una mezcla de dos temperamentos. Este test es orientativo y no sustituye una evaluación psicológica profesional.</p>`;
+show("res");
+}
+function txt(){
+const n=$("nm").value.trim()||"Sin nombre";
+const p=last.p;
+return "Test de temperamentos - "+n+"\nPredominante: "+T[last.a].n+"\nSanguíneo "+p.S+"% | Colérico "+p.C+"% | Melancólico "+p.M+"% | Flemático "+p.F+"%";
+}
+function upd(){$("tx").value=txt();$("st").textContent=""}
+async function copy(){
+upd();
+try{await navigator.clipboard.writeText($("tx").value);$("st").textContent="Copiado. Ya puedes pegarlo en un mensaje."}
+catch(e){$("tx").select();try{document.execCommand("copy");$("st").textContent="Copiado. Ya puedes pegarlo en un mensaje."}catch(_){$("st").textContent="Selecciona el texto de arriba y cópialo manualmente."}}
+}
+$("nm").oninput=upd;$("cp").onclick=copy;
+$("go").onclick=start;$("nx").onclick=next;$("again").onclick=start;
+</script>
+</body>
+</html>
